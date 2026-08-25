@@ -31,16 +31,18 @@ select_target_dir() {
     print_step "选择目标工具"
     echo "  1) claude      → ${HOME}/.claude/skills"
     echo "  2) openclaw    → ${HOME}/.openclaw/skills"
-    echo "  3) 自定义路径"
+    echo "  3) opencode    → ${HOME}/.config/opencode/skills"
+    echo "  4) 自定义路径"
     echo ""
 
     local choice
     while true; do
-        read -rp "  请输入选项 [1-3]: " choice
+        read -rp "  请输入选项 [1-4]: " choice
         case "$choice" in
             1) TARGET_DIR="${HOME}/.claude/skills"; break ;;
             2) TARGET_DIR="${HOME}/.openclaw/skills"; break ;;
-            3)
+            3) TARGET_DIR="${HOME}/.config/opencode/skills"; break ;;
+            4)
                 read -rp "  请输入目标目录路径: " custom_path
                 # 展开 ~ 并去除尾部斜杠
                 custom_path="${custom_path/#\~/$HOME}"
@@ -52,7 +54,7 @@ select_target_dir() {
                 TARGET_DIR="$custom_path"
                 break
                 ;;
-            *) print_err "无效选项，请输入 1、2 或 3" ;;
+            *) print_err "无效选项，请输入 1、2、3 或 4" ;;
         esac
     done
 
