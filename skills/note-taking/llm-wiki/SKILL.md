@@ -37,6 +37,10 @@ Use this skill when the user:
 
 **Location:** Read via `WIKI_PATH` environment variable (e.g. in `~/.bashrc`).
 
+```bash
+echo $WIKI_PATH
+```
+
 If unset, defaults to `~/wiki`.
 
 ```bash
