@@ -1,0 +1,19 @@
+Looking in indexes: https://pypi.org/simple/
+Collecting playwright
+  Using cached playwright-1.62.0-py3-none-manylinux1_x86_64.whl.metadata (3.3 kB)
+Collecting pyee<14,>=13 (from playwright)
+  Using cached pyee-13.0.1-py3-none-any.whl.metadata (3.0 kB)
+Collecting greenlet<4.0.0,>=3.1.1 (from playwright)
+  Using cached greenlet-3.5.5-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.8 kB)
+Requirement already satisfied: typing-extensions in /home/chendongqi/anaconda3/lib/python3.12/site-packages (from pyee<14,>=13->playwright) (4.16.0)
+Downloading playwright-1.62.0-py3-none-manylinux1_x86_64.whl (47.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 47.7/47.7 MB 9.2 MB/s eta 0:00:00
+Downloading greenlet-3.5.5-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (621 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 621.4/621.4 kB 9.7 MB/s eta 0:00:00
+Downloading pyee-13.0.1-py3-none-any.whl (15 kB)
+Installing collected packages: pyee, greenlet, playwright
+  Attempting uninstall: greenlet
+    Found existing installation: greenlet 3.0.1
+    Uninstalling greenlet-3.0.1:
+      Successfully uninstalled greenlet-3.0.1
+Successfully installed greenlet-3.5.5 playwright-1.62.0 pyee-13.0.1
