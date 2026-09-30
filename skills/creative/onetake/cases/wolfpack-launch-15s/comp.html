@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>wolfpack · one card</title>
+<script src="look.js"></script>
+<style>
+:root{ --ground:#eef3fa; --deep:#0b1622; --card:#fff; --line:#dbe4f0; --mute:#7a889b; --ink:#0b1622; --accent:#0069ee; --accent2:#c084fc; }
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--ground)}
+body{font-family:var(--text,Inter,system-ui,sans-serif);color:var(--ink);font-feature-settings:"ss01","cv11"}
+#stage{position:absolute;inset:0;overflow:hidden;background:var(--ground)}
+.abs{position:absolute;left:0;top:0;will-change:transform,opacity}
+/* ── board ── */
+#board{position:absolute;left:0;top:0;width:1920px;height:1080px;background:var(--ground)}
+.col{position:absolute;top:96px;width:404px;border-radius:14px}
+.col .hd{position:absolute;left:22px;top:0;font-size:16px;font-weight:600;color:var(--mute);letter-spacing:.01em}
+.mcard{position:absolute;left:0;width:404px;height:74px;background:var(--card);border:1px solid var(--line);border-radius:10px;
+  box-shadow:0 1px 2px rgba(11,22,34,.04)}
+.mcard .id{position:absolute;left:16px;top:12px;font-family:var(--mono,ui-monospace,monospace);font-size:12px;color:var(--mute)}
+.mcard .ti{position:absolute;left:16px;top:32px;right:44px;font-size:14.5px;font-weight:500;line-height:1.3;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mcard .av{position:absolute;right:14px;top:14px;width:22px;height:22px;border-radius:50%;background:#e4dcf5;color:#8a4fd6;
+  font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center}
+/* ── the one card / detail panel (single node, morphed) ── */
+#hero{position:absolute;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  box-shadow:0 1px 2px rgba(11,22,34,.04);will-change:transform;transform-origin:0 0}
+#hero .id{position:absolute;left:16px;top:12px;font-family:var(--mono,ui-monospace,monospace);font-size:12px;color:var(--mute);white-space:nowrap}
+#hero .ti{position:absolute;left:16px;top:32px;font-size:14.5px;font-weight:500;line-height:1.3;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hero > .av{position:absolute;right:14px;top:14px;width:22px;height:22px;border-radius:50%;background:#e4dcf5;color:#8a4fd6;
+  font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#hero > .av svg{width:13px;height:13px}
+#hero .cnt{position:absolute;left:0;top:0;opacity:0;pointer-events:none}
+/* ── detail contents (inside hero once it's grown) ── */
+#dTitle{position:absolute;left:56px;top:76px;width:820px;font-size:27px;font-weight:600;letter-spacing:-.01em;color:var(--ink)}
+#dRow{position:absolute;left:56px;top:132px;display:flex;align-items:center;gap:18px}
+#dRow .lbl{font-size:13px;color:var(--mute);white-space:nowrap;flex:none}
+#dStatus{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:500;padding:5px 12px;border-radius:7px;
+  background:#eef1f4;color:var(--mute);white-space:nowrap;flex:none}
+#dStatus .dot{width:7px;height:7px;border-radius:50%;background:var(--mute)}
+#dAssignee{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--ink);white-space:nowrap;flex:none}
+#dAssignee .av{width:22px;height:22px;border-radius:50%;background:#e4dcf5;color:#8a4fd6;font-size:10px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+#dAssignee .av svg{width:13px;height:13px}
+#picker{position:absolute;left:236px;top:150px;width:230px;background:var(--card);border:1px solid var(--line);border-radius:10px;
+  box-shadow:0 20px 44px -16px rgba(11,22,34,.22);padding:6px;transform-origin:0 0}
+#picker .row{display:flex;align-items:center;gap:9px;height:34px;padding:0 8px;border-radius:6px;font-size:13.5px}
+#picker .row.hi{background:#eef3fa}
+#picker .av{width:19px;height:19px;border-radius:50%;background:#e4dcf5;color:#8a4fd6;font-size:9px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
+#picker .av svg{width:11px;height:11px}
+#list{position:absolute;left:56px;top:210px;width:900px}
+.arow{position:absolute;left:0;top:0;width:900px;height:34px;display:flex;align-items:center;gap:10px;
+  font-size:13.5px;color:var(--mute)}
+.arow .av{width:19px;height:19px;border-radius:50%;background:#eef1f4;color:var(--mute);font-size:9px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
+.arow .av svg{width:11px;height:11px}
+.arow b{color:var(--ink);font-weight:600}
+.trow{position:absolute;left:0;top:0;width:900px;height:38px;display:flex;align-items:center;gap:11px;
+  font-family:var(--mono,ui-monospace,monospace);font-size:13px;color:var(--mute)}
+.trow .chk{width:16px;height:16px;border-radius:5px;border:1.5px solid #cfd8e3;position:relative;flex:none}
+.trow .chk:after{content:"";position:absolute;left:4px;top:1px;width:5px;height:9px;border-right:2px solid #fff;border-bottom:2px solid #fff;
+  transform:rotate(45deg);opacity:0}
+.trow.on .chk{background:var(--accent);border-color:var(--accent)}
+.trow.on .chk:after{opacity:1}
+.trow .lb{color:var(--ink)}
+.trow .lb b{color:var(--mute);font-weight:400}
+#spin{position:absolute;width:14px;height:14px;border-radius:50%;border:2px solid #d8e0ec;border-top-color:var(--accent)}
+/* ── wordmark end card ── */
+#end{position:absolute;inset:0;background:var(--deep);display:flex;align-items:center;justify-content:center;flex-direction:column}
+#logo{width:74px;height:74px;position:relative;transform-origin:50% 50%}
+#logo .ast{position:absolute;inset:0;background:var(--accent);
+  clip-path:polygon(45% 62.1%,45% 100%,55% 100%,55% 62.1%,81.8% 88.9%,88.9% 81.8%,62.1% 55%,100% 55%,100% 45%,62.1% 45%,88.9% 18.2%,81.8% 11.1%,55% 37.9%,55% 0%,45% 0%,45% 37.9%,18.2% 11.1%,11.1% 18.2%,37.9% 45%,0% 45%,0% 55%,37.9% 55%,11.1% 81.8%,18.2% 88.9%)}
+#mark{margin-top:26px;font-family:var(--display,Georgia,serif);font-size:96px;line-height:1;color:#fff;letter-spacing:-.01em;white-space:nowrap}
+#mark span{display:inline-block;transform-origin:50% 88%}
+#tag{margin-top:14px;font-size:22px;font-weight:500;color:rgba(255,255,255,.62);letter-spacing:.01em}
+/* ── iris stage ── */
+#iris{position:absolute;left:0;top:0;width:16px;height:16px;border-radius:50%;background:var(--deep);pointer-events:none}
+/* cursor */
+#cursor{position:absolute;left:0;top:0;width:26px;height:34px;will-change:transform;filter:drop-shadow(0 2px 5px rgba(11,22,34,.25))}
+#hud{position:absolute;right:14px;bottom:10px;font:13px monospace;color:#c00;display:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="board"></div>
+  <div id="hero"><div class="id">MUL-18</div><div class="ti">Refactor API error handling middleware</div>
+    <div class="av" id="heroAv"></div>
+    <div class="cnt" id="dCnt">
+      <div id="dTitle">Refactor API error handling middleware</div>
+      <div id="dRow"><span class="lbl">Status</span><span id="dStatus"><span class="dot"></span><span id="dStatusL">Todo</span></span>
+        <span class="lbl" style="margin-left:12px">Assignee</span>
+        <span id="dAssignee"><span class="av" id="dAssigneeAv">AR</span><span id="dAssigneeL">Alex Rivera</span></span></div>
+      <div id="list"></div>
+    </div>
+  </div>
+  <div id="picker">
+    <div class="row"><span class="av">U</span>Unassigned</div>
+    <div class="row"><span class="av">AR</span>Alex Rivera</div>
+    <div class="row hi" id="pickClaude"><span class="av" id="pickClaudeAv">C</span>Claude</div>
+  </div>
+  <div id="iris"></div>
+  <div id="end"><div id="logo"><div class="ast"></div></div><div id="mark"></div><div id="tag">AI agents on your team</div></div>
+  <svg id="cursor" viewBox="0 0 34 44"><path d="M4 3 L30 22 L18 24 L26 40 L20 43 L12 27 L4 36 Z" fill="#0b1622" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/></svg>
+  <div id="hud"></div>
+</div>
+<script src="motion.js"></script>
+<script>
+// ══════════════════════════════════════════════════════════════════════════
+// wolfpack · "The Life of One Card" — one issue card is the whole film.
+// It morphs board-card → detail panel → board-card, its assignee morphs
+// human → agent, its own activity list becomes a tool-call timeline, and it
+// lands back in Done. Contract: window.__seek(t) Promise, __ready, __meta.
+// ══════════════════════════════════════════════════════════════════════════
+const BOT_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>';
+
+const FPS=30, DUR=15;
+window.__meta={dur:DUR,fps:FPS,w:1920,h:1080,inFrame:{hero:[0,13.15]},cuts:[13.3]};
+
+// ─────────────────────────── beats (s) — see BEATS.md ───────────────────────────
+const T_CLICK=1.05, T_MORPH0=1.35, T_MORPH1=2.55;
+const T_PICK_IN=3.55, T_PICK_CLICK=3.98, T_PICK_OUT=4.28;
+const T_AV_MORPH=4.15, T_AV_DONE=4.65;
+const T_STATUS1=4.65, T_STATUS1_DONE=4.95;
+const T_LIST_IN=4.95, T_LIST_ROW_DT=0.42;                 // 3 activity rows: 4.95, 5.37, 5.79
+const T_TL_MORPH=6.55, T_TL_MORPH1=7.05;                   // list → tool timeline
+const T_TL_ROW0=7.25, T_TL_ROW_DT=0.55;                    // 5 tool rows through ~9.45
+const T_LAST_TICK=9.85, T_STATUS2=10.15, T_STATUS2_DONE=10.45;
+const T_SHRINK0=10.45, T_SHRINK1=11.15;
+const T_HOP0=11.15, T_HOP1=12.35;
+const T_HOLD1=12.35, T_IRIS0=13.15, T_IRIS1=13.45;
+const T_MARK=13.45, T_END=14.30;
+
+const {clamp,lerp,sstep,ssstep,ease,spring,ring,spline}=OM;
+const $=id=>document.getElementById(id);
+
+// ─────────────────────────── board layout ───────────────────────────
+// four columns; the hero card starts as the 2nd item in Todo, ends as the 2nd item in Done.
+const COLS=[
+  {name:'Backlog',x:80, n:4},
+  {name:'Todo',   x:508,n:5},
+  {name:'In Progress',x:936,n:3},
+  {name:'Done',   x:1364,n:5},
+];
+const rowY=i=>158+i*86;
+COLS.forEach(c=>{ const el=document.createElement('div'); el.className='col'; el.style.left=c.x-24+'px';
+  const hd=document.createElement('div'); hd.className='hd'; hd.textContent=c.name; hd.style.top='0px'; el.appendChild(hd);
+  $('board').appendChild(el); c.el=el; });
+// filler cards (never move) — a couple per column, skipping the hero's slot
+const FILLERS=[
+  {col:0,row:0,id:'MUL-11',ti:'Evaluate Redis for caching layer'},
+  {col:0,row:1,id:'MUL-12',ti:'Draft onboarding email sequence'},
+  {col:0,row:2,id:'MUL-13',ti:'Spike: server-sent events'},
+  {col:0,row:3,id:'MUL-14',ti:'Audit workspace invite flow'},
+  {col:1,row:0,id:'MUL-15',ti:'Build WebSocket notification system'},
+  {col:1,row:2,id:'MUL-17',ti:'Paginate the activity feed'},
+  {col:1,row:3,id:'MUL-20',ti:'Tighten CSP headers'},
+  {col:1,row:4,id:'MUL-21',ti:'Fix flaky invite test'},
+  {col:2,row:0,id:'MUL-22',ti:'Rework issue search ranking'},
+  {col:2,row:2,id:'MUL-23',ti:'Cache workspace member list'},
+  {col:3,row:0,id:'MUL-6', ti:'Add dark mode to settings'},
+  {col:3,row:1,id:'MUL-7', ti:'Migrate to sqlc v2'},
+  {col:3,row:3,id:'MUL-8', ti:'Ship desktop auto-update'},
+  {col:3,row:4,id:'MUL-10',ti:'Wire up billing webhook'},
+];
+FILLERS.forEach(f=>{ const c=COLS[f.col]; const d=document.createElement('div'); d.className='mcard';
+  d.style.left=c.x-24+16+'px'; d.style.top=rowY(f.row)+'px';
+  d.innerHTML=`<div class="id">${f.id}</div><div class="ti">${f.ti}</div><div class="av">AR</div>`;
+  $('board').appendChild(d); });
+// the hero's two board rects (Todo row 1 → Done row 2)
+const RECT_TODO={x:COLS[1].x-24+16, y:rowY(1), w:404, h:74, r:10};
+const RECT_DONE={x:COLS[3].x-24+16, y:rowY(2), w:404, h:74, r:10};
+const RECT_DETAIL={x:20, y:20, w:960, h:600, r:14};
+const RECT_SHRUNK={x:20, y:20, w:404, h:74, r:10};
+
+// activity rows (the list that will morph into the tool-call timeline)
+const ACT=[
+  {av:'AR',name:'Alex Rivera',html:'assigned to <b>Claude</b>'},
+  {av:'',  name:'Claude',      html:'changed status from <b>Todo</b> to <b>In Progress</b>',agent:true},
+  {av:'AR',name:'Alex Rivera', html:'commented: "unify the error format"'},
+];
+const actEls=ACT.map((a,i)=>{ const d=document.createElement('div'); d.className='arow';
+  d.innerHTML=`<span class="av">${a.agent?BOT_SVG:a.av}</span><span>${a.name} ${a.html}</span>`;
+  $('list').appendChild(d); d.style.top=(i*40)+'px'; return d; });
+const TOOL=[
+  {lb:'grep -r "error" server/internal/handler/', on:9},
+  {lb:'read server/internal/handler/issue.go',    on:9},
+  {lb:'edit  · standardize error response type',  on:9},
+  {lb:'go test ./internal/handler/...',           on:9},
+  {lb:'Set up error response types', done:'2m14s'},
+];
+const toolEls=TOOL.map((r,i)=>{ const d=document.createElement('div'); d.className='trow';
+  d.innerHTML=`<span class="chk"></span><span class="lb">${r.lb}${r.done?` <b>· completed ${r.done}</b>`:''}</span>`;
+  $('list').appendChild(d); d.style.top=(i*40)+'px'; d.style.opacity=0; return d; });
+const spinEl=document.createElement('div'); spinEl.id='spin'; $('list').appendChild(spinEl);
+
+// ─────────────────────────── the hand ───────────────────────────
+const heroCenter=r=>({x:r.x+r.w/2,y:r.y+r.h/2});
+const c0=heroCenter(RECT_TODO);
+const pickPt={x:236+230-40,y:150+2*34+17};   // the Claude row in the picker
+const HAND=[
+  {t:0.10,x:1500,y:900},{t:0.75,x:c0.x+40,y:c0.y+8},{t:T_CLICK,x:c0.x+2,y:c0.y+2},{t:T_MORPH0+0.1,x:c0.x+2,y:c0.y+2},
+  {t:2.9, x:1400,y:400},
+  {t:T_PICK_IN+0.15,x:pickPt.x+30,y:pickPt.y-10},{t:T_PICK_CLICK-0.05,x:pickPt.x,y:pickPt.y},{t:T_PICK_CLICK+0.05,x:pickPt.x,y:pickPt.y},
+  {t:4.5, x:1600,y:820},
+  {t:12.6,x:1600,y:820},
+];
+const hand=t=>spline(HAND,t);
+const CLICKS=[T_CLICK,T_PICK_CLICK];
+
+// ─────────────────────────── helpers ───────────────────────────
+function place(el,x,y,s=1,rot=0,op=null){ if(op!=null) el.style.opacity=op;
+  el.style.transform=`translate(${x.toFixed(2)}px,${y.toFixed(2)}px) ${rot?`rotate(${rot.toFixed(3)}deg) `:''}scale(${s.toFixed(4)})`; }
+
+function seek(t){
+  // ── 1 · the hero: morphRect through Todo → Detail → Done, or hop across the board ──
+  let rect, contentK; // contentK: 0 = card face, 1 = detail contents visible
+  const heroEl=$('hero'), cntEl=$('dCnt');
+  if(t<T_MORPH0){ rect={...RECT_TODO}; contentK=0; }
+  else if(t<T_MORPH1){ const m=OM.morphRect(t,T_MORPH0,T_MORPH1,RECT_TODO,RECT_DETAIL,{curve:ease.expoOut}); rect=m; contentK=sstep(T_MORPH0+0.35,T_MORPH1,t); }
+  else if(t<T_SHRINK0){ rect={...RECT_DETAIL}; contentK=1; }
+  else if(t<T_SHRINK1){ const m=OM.morphRect(t,T_SHRINK0,T_SHRINK1,RECT_DETAIL,RECT_SHRUNK,{curve:ease.expoOut}); rect=m; contentK=1-sstep(T_SHRINK0,T_SHRINK0+0.35,t); }
+  else if(t<T_HOP1){ const h=OM.hop(t,T_HOP0,T_HOP1,heroCenter(RECT_SHRUNK),heroCenter(RECT_DONE),{height:120}); rect={x:h.x-RECT_DONE.w/2,y:h.y-RECT_DONE.h/2,w:RECT_DONE.w,h:RECT_DONE.h,r:10}; contentK=0; }
+  else { rect={...RECT_DONE}; contentK=0; }
+  place(heroEl,rect.x,rect.y,1);
+  heroEl.style.width=rect.w.toFixed(1)+'px'; heroEl.style.height=rect.h.toFixed(1)+'px'; heroEl.style.borderRadius=rect.r.toFixed(1)+'px';
+  const faceOp=t>=T_CLICK-0.05&&t<T_MORPH0+0.3 ? 1-sstep(T_MORPH0,T_MORPH0+0.25,t) : (t>=T_SHRINK0? sstep(T_SHRINK0,T_SHRINK0+0.25,t) : (t<T_CLICK-0.05?1:0));
+  $('hero').querySelector('.id').style.opacity=faceOp; $('hero').querySelector('.ti').style.opacity=faceOp; $('heroAv').style.opacity=faceOp;
+  cntEl.style.opacity=contentK; cntEl.style.pointerEvents=contentK>0.5?'auto':'none';
+  // click press ring on the board card
+  { const p=OM.press(t,T_CLICK); heroEl.style.boxShadow = p.active?'0 0 0 3px rgba(0,105,238,.25)':'0 1px 2px rgba(11,22,34,.04)'; }
+
+  // ── 2 · assignee: AR → Claude, in both the card avatar and the detail row ──
+  const avK=sstep(T_AV_MORPH,T_AV_DONE,t);
+  const heroAv=$('heroAv'), dAv=$('dAssigneeAv'), dAl=$('dAssigneeL');
+  const showBot = avK>0.5;
+  heroAv.innerHTML = showBot? BOT_SVG:'AR'; heroAv.style.background = showBot? '#f3e8ff':'#e4dcf5'; heroAv.style.color = showBot? '#9333ea':'#8a4fd6';
+  dAv.innerHTML = showBot? BOT_SVG:'AR'; dAv.style.background = showBot? '#f3e8ff':'#e4dcf5'; dAv.style.color = showBot? '#9333ea':'#8a4fd6';
+  dAl.textContent = showBot? 'Claude':'Alex Rivera';
+  { const p=OM.impact(t,T_AV_MORPH+0.05); const s=1+p.r*0.18; dAv.style.transform=`scale(${s.toFixed(3)})`; heroAv.style.transform=dAv.style.transform; }
+
+  // ── 3 · assignee picker ──
+  { const el=$('picker'); const ei=OM.popIn(t,T_PICK_IN,{zeta:0.68,omega:20,rise:14}); const eo=OM.liftOut(t,T_PICK_OUT,{dur:0.22,dist:20,blur:6});
+    const vis=t>=T_PICK_IN-0.02&&t<T_PICK_OUT+0.28;
+    place(el,0,ei.dy+eo.dy,ei.s*eo.s); el.style.opacity=vis?ei.op*eo.op:0; el.style.filter=eo.blur>0.3?`blur(${eo.blur.toFixed(1)}px)`:'none';
+    const p=OM.press(t,T_PICK_CLICK); $('pickClaude').style.background = p.active? '#e6f0ff':''; }
+
+  // ── 4 · status pill: Todo → In Progress → Done ──
+  { const el=$('dStatus'), lb=$('dStatusL'), dot=el.querySelector('.dot');
+    const k1=t>=T_STATUS1_DONE?1:0, k2=t>=T_STATUS2_DONE?1:0;
+    let label='Todo', bg='#eef1f4', fg='#7a889b', dc='#7a889b';
+    if(k1){ label='In Progress'; bg='rgba(189,116,0,.12)'; fg='#bd7400'; dc='#bd7400'; }
+    if(k2){ label='Done'; bg='rgba(0,105,238,.12)'; fg='#0069ee'; dc='#0069ee'; }
+    lb.textContent=label; el.style.background=bg; el.style.color=fg; dot.style.background=dc;
+    const hit = t>=T_STATUS1&&t<T_STATUS1+0.3 ? T_STATUS1 : (t>=T_STATUS2&&t<T_STATUS2+0.3? T_STATUS2 : null);
+    if(hit!=null){ const p=OM.impact(t,hit,{decay:8,omega:24}); el.style.transform=`scale(${(1+p.r*0.14).toFixed(3)})`; } else el.style.transform='scale(1)'; }
+
+  // ── 5 · the list: activity rows rise, then morph into the tool timeline ──
+  const listMorphK=sstep(T_TL_MORPH,T_TL_MORPH1,t);
+  actEls.forEach((el,i)=>{ const t0=T_LIST_IN+i*T_LIST_ROW_DT; const r=OM.maskRise(t,t0,0,{dist:14,omega:20});
+    const fade=1-listMorphK; el.style.opacity=(t>=t0? Math.min(1,r.k*1.3):0)*fade; el.style.transform=`translateY(${(r.y*1).toFixed(1)}px)`; });
+  toolEls.forEach((el,i)=>{ const t0=T_TL_ROW0+i*T_TL_ROW_DT;
+    const rise=OM.maskRise(t,t0,0,{dist:12,omega:22}); const base=t>=t0? Math.min(1,rise.k*1.3):0;
+    el.style.opacity=base*listMorphK; el.style.transform=`translateY(${rise.y.toFixed(1)}px)`;
+    const tk=OM.tick(t,t0+0.32); el.classList.toggle('on',tk.on); el.querySelector('.chk').style.transform=`scale(${tk.s.toFixed(3)})`; });
+  { const lastOn=t>=T_LAST_TICK; const busy = t>=T_TL_ROW0 && !lastOn && listMorphK>0.5;
+    spinEl.style.opacity = busy?1:0; spinEl.style.left='0px'; spinEl.style.top=(TOOL.length*40+6)+'px';
+    spinEl.style.transform = `rotate(${(t*380)%360}deg)`; }
+
+  // ── 6 · board hop hand-off (v hop already applied above; nothing else needed) ──
+
+  // ── 7 · iris stage → wordmark ──
+  { const cx=heroCenter(RECT_DONE).x, cy=heroCenter(RECT_DONE).y; const ir=OM.iris(t,T_IRIS0,T_IRIS1,cx,cy,{r0:8});
+    const on=t>=T_IRIS0; $('iris').style.opacity=on?1:0;
+    const d=ir.r*2; $('iris').style.width=d.toFixed(1)+'px'; $('iris').style.height=d.toFixed(1)+'px';
+    $('iris').style.left=(cx-ir.r).toFixed(1)+'px'; $('iris').style.top=(cy-ir.r).toFixed(1)+'px'; }
+  { const endVis=t>=T_MARK; $('end').style.opacity = endVis? Math.min(1,(t-T_MARK)/0.25):0;
+    const logoK=spring(t-T_MARK,0.55,14); $('logo').style.transform=`scale(${(0.6+0.4*logoK).toFixed(4)}) rotate(${((1-logoK)*70).toFixed(2)}deg)`;
+    MARKL.forEach((s,i)=>{ const d=OM.letterDrop(t,T_MARK+0.15,i,{stagger:0.04,dist:30}); s.style.opacity=d.op; s.style.transform=`translateY(${d.y.toFixed(1)}px) scale(${(1+d.sq*0.5).toFixed(3)},${(1-d.sq).toFixed(3)})`; });
+    const tagW=OM.wordRise(t,T_MARK+0.55,{dist:14}); $('tag').style.opacity=tagW.op; $('tag').style.transform=`translateY(${tagW.y.toFixed(1)}px)`; }
+  // fade the whole board+hero away under the iris
+  { const boardOp = t<T_IRIS0? 1 : 1-sstep(T_IRIS0,T_IRIS0+0.2,t); $('board').style.opacity=boardOp; heroEl.style.opacity=Math.min(heroEl.style.opacity||1,boardOp); }
+
+  // ── hand ──
+  { const vis=t>=0.5&&t<12.7; const cu=OM.cursor(t,HAND,CLICKS);
+    $('cursor').style.opacity=vis?1:0; $('cursor').style.transform=`translate(${(cu.x-4).toFixed(1)}px,${(cu.y-3).toFixed(1)}px) scale(${cu.s})`; }
+  $('hud').textContent='t='+t.toFixed(3);
+  return Promise.resolve();
+}
+
+const markEl=$('mark'); const MARKL=[...'Wolfpack'].map(ch=>{const s=document.createElement('span');s.textContent=ch;markEl.appendChild(s);return s;});
+
+window.__seek=async t=>{ seek(t); return true; };
+window.__ready=(window.LOOK? LOOK.ready:Promise.resolve()).then(()=>document.fonts.ready).then(()=>seek(0));
+const q=new URLSearchParams(location.search);
+if(q.has('t')) __ready.then(()=>seek(parseFloat(q.get('t'))));
+if(q.has('hud')) $('hud').style.display='block';
+if(q.has('play')) __ready.then(()=>{const t0=performance.now();(function loop(){seek(((performance.now()-t0)/1000)%DUR);requestAnimationFrame(loop);})();});
+</script>
+</body>
+</html>
