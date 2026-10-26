@@ -56,11 +56,60 @@ description: 生成"一天一个开源项目"系列的技术文章。当用户�
 - **实用性强**：提供实际的使用示例和常见场景
 - **深入剖析**：不仅介绍如何使用，还要解释原理和设计思路
 
+## 格式避坑（构建会因此失败）
+
+这个站点用 `next-mdx-remote` 渲染，文章一旦写出下面的内容，`pnpm run build` 会失败或文章被静默丢弃。
+
+### 1. 不要在正文里用 HTML 注释
+
+- ❌ `<!-- 图片位置：xxx -->` → MDX 报 `Unexpected character '!' before name`，**整个页面预渲染失败，构建中断**
+- ✅ 需要占位说明时用 MDX 注释 `{/* 图片位置：xxx */}`，或者直接不写
+- 同理，正文里不要出现未闭合的 `<标签>`、裸的 `{`、`}`（行内代码和代码块里除外）
+
+### 2. frontmatter 的 description / title 里不要嵌套英文双引号
+
+- ❌ `description: "…只验证"能装上"…"` → 内层引号提前结束字符串，YAMLException
+- 这类错误**不会让构建失败**，只会在日志里出现 `Skipping file with invalid date`，**文章悄悄消失**，所以最容易漏
+- ✅ 内层引用统一用中文引号 `「」` 或 `“”`，或者整段 description 不加引号
+- 值里含冒号 `: ` 或以 `[`、`{`、`*`、`&` 开头时，也必须加引号
+- 写完用 gray-matter 验证一遍（见质量检查）
+
+### 3. 每篇必须同时写中英文两个版本
+
+站点按语言分目录，**只写中文版会导致英文站缺文章**：
+
+- 中文：`apps/wonderlab/content/blog/open-source-projects/<序号>-<slug>.md`
+- 英文：`apps/wonderlab/content/blog-en/open-source-projects/<序号>-<slug>.md`
+- 文件名（序号-slug）两边必须一致；英文版 title 用 `Open Source Project #<序号>: …`，tags 用英文
+- 两个版本都要遵守上面两条格式规则：之前就是只改了中文版，英文版同样的注释导致 `/en` 页面构建失败
+
+### 4. 图片
+
+- 图片放在文章同目录的 `images/` 下，用 `./images/xxx.png` 引用；**不要用 `../../` 向上跳**，渲染时会报 `Path attempts to escape blog directory`
+- 中英文两个目录各放一份
+- 截图里如果有真实工单号、用户名、内网地址等，先问用户是否打码
+
+## 取数方式（访问 GitHub）
+
+- WebFetch 访问 github.com 可能被网络策略拦截（`Unable to verify if domain github.com is safe`）。此时改用 `curl`：
+  - 元数据：`curl -sS https://api.github.com/repos/<owner>/<repo>`（Stars、Forks、语言、创建时间、topics、license）
+  - README：`curl -sS -H 'Accept: application/vnd.github.raw' https://api.github.com/repos/<owner>/<repo>/readme`（比 raw.githubusercontent.com 稳定）
+  - 发布版本：`/releases`；语言占比：`/languages`；目录结构：`/git/trees/HEAD?recursive=1`
+- 本机未必有 `gh`，不要依赖
+- 大文件（README 数百 KB、文件树近 1 MB）直接落盘到 `/tmp/<项目名>/` 再用脚本或分段读取，不要直接打印；网络慢时命令会超时，改成落盘 + 重试
+- 抓不到的文件（例如 PROMPT.md、LICENSE）**不要凭印象写**，文中涉及时标注"据 README 转述"，并在最后告诉用户哪些没读到
+- README 里的自述数据（浏览量、贡献者数、覆盖机型数等）写成"据 README 自述"，不要当作已核实的事实
+- Stars、Forks、版本号增长很快，文中注明取数日期
+
 ## 质量检查
 
 生成文章后，检查以下项目：
 
 - [ ] YAML front matter 格式正确，包含所有必需字段
+- [ ] 用 gray-matter 验证 frontmatter 能解析（在 `apps/wonderlab` 下）：`node -e "const m=require('gray-matter');const r=m(require('fs').readFileSync('<文件>','utf8'));console.log(r.data.title,r.data.date,r.data.tags.length)"`
+- [ ] 全文没有 `<!--`：`grep -c '<!--' <文件>` 结果为 0
+- [ ] 中英文两个版本都已创建，文件名一致
+- [ ] 图片路径都是 `./images/…` 且文件存在
 - [ ] 引言部分明确说明这是第X篇
 - [ ] 项目背景信息完整
 - [ ] 主要功能部分包含：作用、场景、快速开始、特性、优势
@@ -81,4 +130,5 @@ description: 生成"一天一个开源项目"系列的技术文章。当用户�
 2. **保持客观**：客观评价项目，既说明优点也指出可能的局限性
 3. **时效性**：注意项目信息的时效性，使用最新的版本和特性
 4. **准确性**：确保技术信息的准确性，不确定的内容要标注
+5. **改完要验证**：修改或新增文章后，如果用户没有说"我自己构建"，就在 `apps/wonderlab` 下跑 `pnpm run build`，过滤掉 `LaTeX-incompatible` 和 `MDX Image` 两类 warning 再看结果，它们不影响构建；重点看 `Failed to parse MDX file`、`Skipping file with invalid date` 和 `Export encountered errors`
 
