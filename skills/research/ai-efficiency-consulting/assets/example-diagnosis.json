@@ -1,0 +1,67 @@
+{
+  "client": "示例客户(虚构数据,仅用于演示格式)",
+  "scopes": [
+    {
+      "id": "defect-analysis",
+      "name": "缺陷分析",
+      "interviewed": true,
+      "scores": { "tools": 2, "workflow": 1, "data": 2, "infra": 2, "governance": 1, "org": 2, "metrics": 1 },
+      "evidence": {
+        "tools": ["访谈:有统一的 agent 入口,常用分析做法已沉淀 6 个 Skill"],
+        "workflow": ["访谈:分析流程仍由人在多个工具间转交"],
+        "data": ["抽样:缺陷记录可检索,但存在重复和旧版本"],
+        "infra": ["访谈:各人自备 agent 工具加插件,未统一管理"],
+        "governance": ["访谈:无入库规则、无责任人"],
+        "org": ["访谈:有业务 owner"],
+        "metrics": ["访谈:只有使用次数,没有成本和效能数据"]
+      },
+      "unverified": [],
+      "target_stage": "A3",
+      "target_scores": { "tools": 3, "workflow": 3, "data": 3, "infra": 3, "governance": 3, "org": 3, "metrics": 3 },
+      "platform": { "name": "Wolfpack", "type": "I", "gaps": "版本关系、冲突识别、质量门禁" },
+      "data_items": [
+        { "name": "历史缺陷记录", "type": "structured", "system": "缺陷管理系统", "gap": "unusable", "access": "连接器 + 增量同步", "platform_action": "新建导入配置并补入库治理", "risk": "重复与旧版本需先治理", "priority": 1 },
+        { "name": "根因分析结论", "type": "document", "system": "文档平台", "gap": "unreachable", "access": "官方 API + 同步", "platform_action": "增加连接器", "risk": "数据源权限范围待确认", "priority": 2 },
+        { "name": "评审会议中的口头结论", "type": "unstructured", "system": "会议录音", "gap": "missing", "access": "会议转写", "platform_action": "转写后走入库流程", "risk": "转写错误、隐私合规", "priority": 3 }
+      ],
+      "roadmap": {
+        "tasks": [
+          { "id": "t1", "name": "解决数据源权限", "lane": "governance", "start": 0, "duration": 2, "deps": [], "owner": "业务 owner", "output": "权限矩阵", "acceptance": "服务账号可读且范围已确认" },
+          { "id": "t2", "name": "建评测集(50 题)", "lane": "metrics", "start": 0, "duration": 3, "deps": [], "owner": "评测 Owner", "output": "评测集", "acceptance": "覆盖核心问题" },
+          { "id": "t3", "name": "缺陷记录接入", "lane": "data", "start": 2, "duration": 4, "deps": ["t1"], "owner": "知识库 Owner", "output": "导入配置", "acceptance": "增量同步稳定" },
+          { "id": "t4", "name": "入库治理规则", "lane": "governance", "start": 6, "duration": 4, "deps": ["t3"], "owner": "知识库 Owner", "output": "治理规则与门禁", "acceptance": "规则可自动执行" },
+          { "id": "t5", "name": "分析 Skill 评测与准入", "lane": "tools", "start": 3, "duration": 5, "deps": ["t2"], "owner": "Skill Owner", "output": "Skill 版本与评测记录", "acceptance": "准确率达标" },
+          { "id": "t6", "name": "分析 Workflow(含人工确认点)", "lane": "workflow", "start": 10, "duration": 5, "deps": ["t4", "t5"], "owner": "Workflow Owner", "output": "Workflow", "acceptance": "端到端成功率达标" },
+          { "id": "t7", "name": "成本与效能度量链路", "lane": "metrics", "start": 8, "duration": 4, "deps": ["t2"], "owner": "评测 Owner", "output": "度量看板", "acceptance": "可算 ROI" }
+        ],
+        "milestones": [
+          { "name": "治理规则自动执行", "at": 10, "gate": "进入 A3 前:治理线 ≥ L3" },
+          { "name": "端到端上线", "at": 15, "gate": "Workflow 在人在回路下稳定运行" }
+        ]
+      }
+    },
+    {
+      "id": "erp-query",
+      "name": "ERP 数据查询",
+      "interviewed": true,
+      "scores": { "tools": 1, "workflow": 0, "data": 0, "infra": 1, "governance": 1, "org": 1, "metrics": 0 },
+      "evidence": {
+        "tools": ["访谈:个别人用通用对话工具问 SQL"],
+        "infra": ["访谈:各人自备"],
+        "governance": ["访谈:口头约定不接生产库"],
+        "org": ["访谈:个别爱好者"]
+      },
+      "unverified": ["tools"],
+      "target_stage": "A2",
+      "platform": { "name": "Claude Code", "type": "II", "route": "b" },
+      "data_items": [
+        { "name": "销售与库存业务表", "type": "structured", "system": "ERP 数据库", "gap": "insufficient", "access": "数据库只读 + 业务语义层", "platform_action": "自建 MCP 网关,暴露语义层查询工具", "risk": "表字段晦涩;必须只读账号并脱敏", "priority": 1 }
+      ]
+    },
+    {
+      "id": "qa",
+      "name": "测试用例设计",
+      "interviewed": false
+    }
+  ]
+}

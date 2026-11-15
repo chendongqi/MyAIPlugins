@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "企业 AI 提效诊断数据",
+  "description": "诊断与方案共用的数据。score.py 校验并写回 stage/bottlenecks/risks,render_*.py 读取它生成 HTML。字段含义见 references/interview-guide.md 的 7.4 节。",
+  "type": "object",
+  "required": ["scopes"],
+  "properties": {
+    "client": { "type": "string" },
+    "scopes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "interviewed"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "interviewed": {
+            "type": "boolean",
+            "description": "false 表示访谈中没有提到,固定 A0,不得带 scores"
+          },
+          "scores": {
+            "type": "object",
+            "description": "仅已访谈的范围填写。每项 0-4(L0-L4)。",
+            "required": ["tools", "workflow", "data", "infra", "governance", "org", "metrics"],
+            "properties": {
+              "tools": { "type": "integer", "minimum": 0, "maximum": 4 },
+              "workflow": { "type": "integer", "minimum": 0, "maximum": 4 },
+              "data": { "type": "integer", "minimum": 0, "maximum": 4 },
+              "infra": { "type": "integer", "minimum": 0, "maximum": 4 },
+              "governance": { "type": "integer", "minimum": 0, "maximum": 4 },
+              "org": { "type": "integer", "minimum": 0, "maximum": 4 },
+              "metrics": { "type": "integer", "minimum": 0, "maximum": 4 }
+            }
+          },
+          "evidence": {
+            "type": "object",
+            "description": "每条能力线的证据列表。分数 > 0 的线必须有证据,或列入 unverified。",
+            "additionalProperties": { "type": "array", "items": { "type": "string" } }
+          },
+          "unverified": {
+            "type": "array",
+            "description": "只有口述、没有证据的能力线 key;图上以 * 标出。",
+            "items": { "enum": ["tools", "workflow", "data", "infra", "governance", "org", "metrics"] }
+          },
+          "target_stage": { "enum": ["A0", "A1", "A2", "A3", "A4"] },
+          "target_scores": {
+            "type": "object",
+            "description": "目标各线等级,用于雷达对比图;可选。",
+            "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 4 }
+          },
+          "platform": {
+            "type": "object",
+            "required": ["name", "type"],
+            "properties": {
+              "name": { "type": "string" },
+              "type": { "enum": ["I", "II"], "description": "I=自带知识基建;II=不带知识基建" },
+              "route": { "enum": ["a", "b", "c"], "description": "仅 II 类必填。a=业务系统自带 MCP;b=自建知识基建/MCP 网关;c=Skill/文件下发" },
+              "gaps": { "type": "string", "description": "I 类平台上需要补的基建,文字说明" }
+            }
+          },
+          "data_items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "system", "gap", "access"],
+              "properties": {
+                "name": { "type": "string" },
+                "type": { "type": "string" },
+                "system": { "type": "string" },
+                "gap": { "enum": ["missing", "unreachable", "unusable", "insufficient"] },
+                "access": { "type": "string" },
+                "platform_action": { "type": "string" },
+                "risk": { "type": "string" },
+                "priority": { "type": "integer" }
+              }
+            }
+          },
+          "acceptance": { "type": "array", "items": { "type": "string" }, "description": "方案的验收指标,须含业务结果,不只是检索指标" },
+          "roadmap": {
+            "type": "object",
+            "properties": {
+              "tasks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["id", "name", "lane", "start", "duration"],
+                  "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "lane": { "enum": ["tools", "workflow", "data", "infra", "governance", "org", "metrics"] },
+                    "start": { "type": "number", "description": "相对时间,由顾问按客户约束填写;不得默认编造" },
+                    "duration": { "type": "number" },
+                    "deps": { "type": "array", "items": { "type": "string" } },
+                    "owner": { "type": "string" },
+                    "output": { "type": "string" },
+                    "acceptance": { "type": "string" }
+                  }
+                }
+              },
+              "milestones": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "at"],
+                  "properties": {
+                    "name": { "type": "string" },
+                    "at": { "type": "number" },
+                    "gate": { "type": "string", "description": "对应的阶段门槛" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
